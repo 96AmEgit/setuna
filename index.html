@@ -176,8 +176,9 @@
       const delta1 = p1Time - readyTime;
       const delta2 = p2Time - readyTime;
 
-      if (Math.abs(delta1 - delta2) < 50) {
-        msg = `相打ち！引き分け (${Math.abs(delta1 - delta2).toFixed(0)}ms差)`;
+      // 完全に同タイムの場合のみ引き分け
+      if (delta1 === delta2) {
+        msg = '相打ち！引き分け';
       } else if (delta1 < delta2) {
         msg = `プレイヤー1の勝ち！ (${(delta1).toFixed(0)}ms)`;
       } else {
