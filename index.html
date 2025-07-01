@@ -5,15 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>刹那の見合い切り</title>
   <style>
+    * { box-sizing: border-box; }
     body {
-      font-family: sans-serif;
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      font-family: sans-serif;
       background: #f0f0f0;
     }
     .game-container {
@@ -29,35 +25,23 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      border: 2px solid #ccc;
       padding: 20px;
-      box-sizing: border-box;
-    }
-    .status {
-      font-size: 1.2em;
-      margin: 10px;
+      border: 1px solid #ccc;
     }
     .btn {
       padding: 20px 40px;
       font-size: 2em;
-      cursor: pointer;
-      width: 90%;
-      max-width: 400px;
+      margin-top: 10px;
+      background-color: #444;
+      color: white;
       border: none;
       border-radius: 10px;
-      background-color: #444;
-      color: #fff;
+      width: 90%;
+      max-width: 400px;
     }
-    .btn.slash-btn {
-      opacity: 0.3;
-      pointer-events: none;
-    }
-    .btn.slash-btn.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .btn:hover {
-      background-color: #222;
+    .status {
+      margin-top: 10px;
+      font-size: 1.2em;
     }
     .result {
       position: fixed;
@@ -72,12 +56,6 @@
       border-radius: 8px;
       z-index: 2;
     }
-    .start-btn {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
     .center-label {
       position: absolute;
       top: 50%;
@@ -86,11 +64,18 @@
       font-size: 3em;
       font-weight: bold;
       color: red;
-      z-index: 1;
       display: none;
+      z-index: 1;
     }
-    .show-center-label {
+    .show {
       display: block;
+    }
+    .start-btn {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
     }
   </style>
 </head>
@@ -101,13 +86,13 @@
 
     <div class="player" id="player2">
       <h2>プレイヤー2</h2>
-      <button class="btn slash-btn" id="btn2" ontouchstart="slash('p2')" onclick="slash('p2')">斬る</button>
+      <button class="btn" ontouchstart="slash('p2')" onclick="slash('p2')">斬る</button>
       <div class="status" id="status2">待機中...</div>
     </div>
 
     <div class="player" id="player1">
       <h2>プレイヤー1</h2>
-      <button class="btn slash-btn" id="btn1" ontouchstart="slash('p1')" onclick="slash('p1')">斬る</button>
+      <button class="btn" ontouchstart="slash('p1')" onclick="slash('p1')">斬る</button>
       <div class="status" id="status1">待機中...</div>
     </div>
   </div>
@@ -120,28 +105,29 @@
     let p1Time = null;
     let p2Time = null;
     let resultShown = false;
+    let gameTimeoutId = null; // ゲームのタイマーIDを保持する変数
 
     function startGame() {
+      // 既存のタイマーがあればクリアする
+      if (gameTimeoutId) {
+        clearTimeout(gameTimeoutId);
+      }
+      
       document.getElementById('result').innerText = '見合いの準備中...';
       document.getElementById('status1').innerText = '待機中...';
       document.getElementById('status2').innerText = '待機中...';
+      document.getElementById('centerLabel').classList.remove('show');
       p1Time = null;
       p2Time = null;
       resultShown = false;
       started = false;
-      document.getElementById('btn1').classList.remove('active');
-      document.getElementById('btn2').classList.remove('active');
-      document.getElementById('centerLabel').classList.remove('show-center-label');
 
       const delay = Math.random() * 3000 + 2000;
-
-      setTimeout(() => {
+      gameTimeoutId = setTimeout(() => {
         started = true;
         readyTime = performance.now();
         document.getElementById('result').innerText = '見合い開始！斬れッ！';
-        document.getElementById('btn1').classList.add('active');
-        document.getElementById('btn2').classList.add('active');
-        document.getElementById('centerLabel').classList.add('show-center-label');
+        document.getElementById('centerLabel').classList.add('show');
       }, delay);
     }
 
@@ -149,39 +135,58 @@
       if (resultShown) return;
       const now = performance.now();
 
+      // 早斬り判定 (startedがfalseの時に斬った場合)
+      if (!started) {
+        // タイマーを止めて「斬れ！」が表示されるのを防ぐ
+        clearTimeout(gameTimeoutId); 
+        resultShown = true;
+        document.getElementById('centerLabel').classList.remove('show');
+        
+        if (player === 'p1') {
+          document.getElementById('result').innerText = 'プレイヤー1の早斬り！ プレイヤー2の勝ち！';
+          document.getElementById('status1').innerText = '早斬り！(負け)';
+          document.getElementById('status2').innerText = '勝ち';
+        } else {
+          document.getElementById('result').innerText = 'プレイヤー2の早斬り！ プレイヤー1の勝ち！';
+          document.getElementById('status2').innerText = '早斬り！(負け)';
+          document.getElementById('status1').innerText = '勝ち';
+        }
+        return; // 処理を終了
+      }
+
+      // 通常の斬り
       if (player === 'p1') {
         if (p1Time !== null) return;
         p1Time = now;
-        document.getElementById('status1').innerText = started ? '斬った！' : '早斬り！';
+        document.getElementById('status1').innerText = '斬った！';
       } else {
         if (p2Time !== null) return;
         p2Time = now;
-        document.getElementById('status2').innerText = started ? '斬った！' : '早斬り！';
+        document.getElementById('status2').innerText = '斬った！';
       }
 
       checkResult();
     }
 
     function checkResult() {
+      // 両者が斬るまで待つ
       if (p1Time === null || p2Time === null) return;
-
+      
       let msg = '';
-      if (!started) {
-        msg = '両者早斬り！引き分け';
-      } else {
-        const delta1 = p1Time - readyTime;
-        const delta2 = p2Time - readyTime;
+      const delta1 = p1Time - readyTime;
+      const delta2 = p2Time - readyTime;
 
-        if (Math.abs(delta1 - delta2) < 50) {
-          msg = '相打ち！引き分け';
-        } else if (delta1 < delta2) {
-          msg = 'プレイヤー1の勝ち！';
-        } else {
-          msg = 'プレイヤー2の勝ち！';
-        }
+      if (Math.abs(delta1 - delta2) < 50) {
+        msg = `相打ち！引き分け (${Math.abs(delta1 - delta2).toFixed(0)}ms差)`;
+      } else if (delta1 < delta2) {
+        msg = `プレイヤー1の勝ち！ (${(delta1).toFixed(0)}ms)`;
+      } else {
+        msg = `プレイヤー2の勝ち！ (${(delta2).toFixed(0)}ms)`;
       }
+      
       resultShown = true;
       document.getElementById('result').innerText = msg;
+      document.getElementById('centerLabel').classList.remove('show');
     }
   </script>
 </body>
