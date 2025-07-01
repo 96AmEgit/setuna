@@ -2,31 +2,92 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>刹那の見合い切り</title>
   <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-    .player { margin: 20px; }
-    .status { font-size: 1.2em; margin: 10px; }
-    .btn { padding: 15px 30px; font-size: 1.5em; cursor: pointer; }
-    .hidden { visibility: hidden; }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f0f0f0;
+    }
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+    .player {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #ccc;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .status {
+      font-size: 1.2em;
+      margin: 10px;
+    }
+    .btn {
+      padding: 20px 40px;
+      font-size: 2em;
+      cursor: pointer;
+      width: 90%;
+      max-width: 400px;
+      border: none;
+      border-radius: 10px;
+      background-color: #444;
+      color: #fff;
+    }
+    .btn:hover {
+      background-color: #222;
+    }
+    .result {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5em;
+      font-weight: bold;
+      background: #fff;
+      padding: 10px 20px;
+      border: 2px solid #000;
+      border-radius: 8px;
+    }
+    .start-btn {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
   </style>
 </head>
 <body>
-  <h1>刹那の見合い切り</h1>
-  <div class="player" id="player1">
-    <h2>プレイヤー1</h2>
-    <button class="btn" onclick="slash('p1')">斬る</button>
-    <div class="status" id="status1">待機中...</div>
+  <div class="game-container">
+    <div class="result" id="result">ゲーム開始を待っています...</div>
+
+    <div class="player" id="player2">
+      <h2>プレイヤー2</h2>
+      <button class="btn" ontouchstart="slash('p2')" onclick="slash('p2')">斬る</button>
+      <div class="status" id="status2">待機中...</div>
+    </div>
+
+    <div class="player" id="player1">
+      <h2>プレイヤー1</h2>
+      <button class="btn" ontouchstart="slash('p1')" onclick="slash('p1')">斬る</button>
+      <div class="status" id="status1">待機中...</div>
+    </div>
   </div>
 
-  <div class="player" id="player2">
-    <h2>プレイヤー2</h2>
-    <button class="btn" onclick="slash('p2')">斬る</button>
-    <div class="status" id="status2">待機中...</div>
-  </div>
-
-  <h2 id="result">ゲーム開始を待っています...</h2>
-  <button onclick="startGame()" class="btn">開始</button>
+  <button onclick="startGame()" class="btn start-btn">開始</button>
 
   <script>
     let started = false;
@@ -36,7 +97,7 @@
     let resultShown = false;
 
     function startGame() {
-      document.getElementById('result').innerText = '見合いの準備中...';
+      document.getElementById('result').innerText = '待機中...';
       document.getElementById('status1').innerText = '待機中...';
       document.getElementById('status2').innerText = '待機中...';
       p1Time = null;
