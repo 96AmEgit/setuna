@@ -47,10 +47,12 @@
       border-radius: 10px;
       background-color: #444;
       color: #fff;
+    }
+    .btn.slash-btn {
       opacity: 0.3;
       pointer-events: none;
     }
-    .btn.active {
+    .btn.slash-btn.active {
       opacity: 1;
       pointer-events: auto;
     }
@@ -99,13 +101,13 @@
 
     <div class="player" id="player2">
       <h2>プレイヤー2</h2>
-      <button class="btn" id="btn2" ontouchstart="slash('p2')" onclick="slash('p2')">斬る</button>
+      <button class="btn slash-btn" id="btn2" ontouchstart="slash('p2')" onclick="slash('p2')">斬る</button>
       <div class="status" id="status2">待機中...</div>
     </div>
 
     <div class="player" id="player1">
       <h2>プレイヤー1</h2>
-      <button class="btn" id="btn1" ontouchstart="slash('p1')" onclick="slash('p1')">斬る</button>
+      <button class="btn slash-btn" id="btn1" ontouchstart="slash('p1')" onclick="slash('p1')">斬る</button>
       <div class="status" id="status1">待機中...</div>
     </div>
   </div>
