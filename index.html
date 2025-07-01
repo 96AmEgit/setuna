@@ -81,7 +81,7 @@
 </head>
 <body>
   <div class="game-container">
-    <div class="result" id="result">ゲーム開始を待っています...</div>
+    <div class="result" id="result">待機中...</div>
     <div class="center-label" id="centerLabel">斬れ！</div>
 
     <div class="player" id="player2">
@@ -113,7 +113,7 @@
         clearTimeout(gameTimeoutId);
       }
       
-      document.getElementById('result').innerText = '見合いの準備中...';
+      document.getElementById('result').innerText = '準備...';
       document.getElementById('status1').innerText = '待機中...';
       document.getElementById('status2').innerText = '待機中...';
       document.getElementById('centerLabel').classList.remove('show');
@@ -126,7 +126,7 @@
       gameTimeoutId = setTimeout(() => {
         started = true;
         readyTime = performance.now();
-        document.getElementById('result').innerText = '見合い開始！斬れッ！';
+        document.getElementById('result').innerText = '斬れッ！';
         document.getElementById('centerLabel').classList.add('show');
       }, delay);
     }
