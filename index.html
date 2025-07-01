@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>刹那の見合い切り</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    .player { margin: 20px; }
+    .status { font-size: 1.2em; margin: 10px; }
+    .btn { padding: 15px 30px; font-size: 1.5em; cursor: pointer; }
+    .hidden { visibility: hidden; }
+  </style>
+</head>
+<body>
+  <h1>刹那の見合い切り</h1>
+  <div class="player" id="player1">
+    <h2>プレイヤー1</h2>
+    <button class="btn" onclick="slash('p1')">斬る</button>
+    <div class="status" id="status1">待機中...</div>
+  </div>
+
+  <div class="player" id="player2">
+    <h2>プレイヤー2</h2>
+    <button class="btn" onclick="slash('p2')">斬る</button>
+    <div class="status" id="status2">待機中...</div>
+  </div>
+
+  <h2 id="result">ゲーム開始を待っています...</h2>
+  <button onclick="startGame()" class="btn">開始</button>
+
+  <script>
+    let started = false;
+    let readyTime = 0;
+    let p1Time = null;
+    let p2Time = null;
+    let resultShown = false;
+
+    function startGame() {
+      document.getElementById('result').innerText = '見合いの準備中...';
+      document.getElementById('status1').innerText = '待機中...';
+      document.getElementById('status2').innerText = '待機中...';
+      p1Time = null;
+      p2Time = null;
+      resultShown = false;
+
+      const delay = Math.random() * 3000 + 2000;
+      started = false;
+
+      setTimeout(() => {
+        started = true;
+        readyTime = performance.now();
+        document.getElementById('result').innerText = '見合い開始！斬れッ！';
+      }, delay);
+    }
+
+    function slash(player) {
+      if (resultShown) return;
+      const now = performance.now();
+
+      if (player === 'p1') {
+        if (p1Time !== null) return;
+        p1Time = now;
+        document.getElementById('status1').innerText = started ? '斬った！' : '早斬り！';
+      } else {
+        if (p2Time !== null) return;
+        p2Time = now;
+        document.getElementById('status2').innerText = started ? '斬った！' : '早斬り！';
+      }
+
+      checkResult();
+    }
+
+    function checkResult() {
+      if (p1Time === null || p2Time === null) return;
+
+      let msg = '';
+      if (!started) {
+        msg = '両者早斬り！引き分け';
+      } else {
+        const delta1 = p1Time - readyTime;
+        const delta2 = p2Time - readyTime;
+
+        if (Math.abs(delta1 - delta2) < 50) {
+          msg = '相打ち！引き分け';
+        } else if (delta1 < delta2) {
+          msg = 'プレイヤー1の勝ち！';
+        } else {
+          msg = 'プレイヤー2の勝ち！';
+        }
+      }
+      resultShown = true;
+      document.getElementById('result').innerText = msg;
+    }
+  </script>
+</body>
+</html>
