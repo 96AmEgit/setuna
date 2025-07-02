@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>刹那の見合い切り</title>
+  <title>刹那の見合い切りforスマホ</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
       font-family: sans-serif;
-      background: #f0f0f0;
+      background: #ffffff;
     }
     .game-container {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      height: 90vh;
       width: 100vw;
       position: relative;
     }
@@ -27,6 +27,9 @@
       align-items: center;
       padding: 20px;
       border: 1px solid #ccc;
+    }
+    #player2 {
+      transform: rotate(180deg);
     }
     .btn {
       padding: 20px 40px;
@@ -61,7 +64,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 3em;
+      font-size: 4em;
       font-weight: bold;
       color: red;
       display: none;
@@ -212,5 +215,9 @@
       document.getElementById('result').innerText = msg;
     }
   </script>
+      <!-- フッター -->
+    <footer>
+        <p>&copy; 2024 くろあめ</p>
+    </footer>
 </body>
 </html>
