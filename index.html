@@ -105,13 +105,16 @@
     let p1Time = null;
     let p2Time = null;
     let resultShown = false;
-    let gameTimeoutId = null; // ゲームのタイマーIDを保持する変数
+    let gameTimeoutId = null;
+    let decisionTimeoutId = null; // 勝敗決定タイマーのID
+
+    // 定数: 相手の反応を待つ時間 (ミリ秒)
+    const REACTION_TIMEOUT = 2000;
 
     function startGame() {
-      // 既存のタイマーがあればクリアする
-      if (gameTimeoutId) {
-        clearTimeout(gameTimeoutId);
-      }
+      // 既存のタイマーがあればすべてクリアする
+      if (gameTimeoutId) clearTimeout(gameTimeoutId);
+      if (decisionTimeoutId) clearTimeout(decisionTimeoutId);
       
       document.getElementById('result').innerText = '準備...';
       document.getElementById('status1').innerText = '待機中...';
@@ -135,59 +138,78 @@
       if (resultShown) return;
       const now = performance.now();
 
-      // 早斬り判定 (startedがfalseの時に斬った場合)
+      // 早斬り判定
       if (!started) {
-        // タイマーを止めて「斬れ！」が表示されるのを防ぐ
-        clearTimeout(gameTimeoutId); 
-        resultShown = true;
-        document.getElementById('centerLabel').classList.remove('show');
-        
-        if (player === 'p1') {
-          document.getElementById('result').innerText = 'プレイヤー1の早斬り！ プレイヤー2の勝ち！';
-          document.getElementById('status1').innerText = '早斬り！(負け)';
-          document.getElementById('status2').innerText = '勝ち';
-        } else {
-          document.getElementById('result').innerText = 'プレイヤー2の早斬り！ プレイヤー1の勝ち！';
-          document.getElementById('status2').innerText = '早斬り！(負け)';
-          document.getElementById('status1').innerText = '勝ち';
-        }
-        return; // 処理を終了
+        clearTimeout(gameTimeoutId);
+        showResult(player === 'p1' ? 'p2' : 'p1', player, 'early');
+        return;
       }
 
-      // 通常の斬り
-      if (player === 'p1') {
-        if (p1Time !== null) return;
+      const isP1 = player === 'p1';
+      // 既に斬っている場合は何もしない
+      if ((isP1 && p1Time !== null) || (!isP1 && p2Time !== null)) {
+        return;
+      }
+
+      if (isP1) {
         p1Time = now;
         document.getElementById('status1').innerText = '斬った！';
       } else {
-        if (p2Time !== null) return;
         p2Time = now;
         document.getElementById('status2').innerText = '斬った！';
       }
 
-      checkResult();
+      // 両者が斬ったか確認
+      if (p1Time !== null && p2Time !== null) {
+        clearTimeout(decisionTimeoutId); // タイムアウト処理をキャンセル
+        checkResult();
+      } else {
+        // 最初の斬りだった場合、相手の反応を待つタイマーを開始
+        decisionTimeoutId = setTimeout(() => {
+          showResult(player, null, 'timeout');
+        }, REACTION_TIMEOUT);
+      }
     }
 
     function checkResult() {
-      // 両者が斬るまで待つ
-      if (p1Time === null || p2Time === null) return;
-      
-      let msg = '';
       const delta1 = p1Time - readyTime;
       const delta2 = p2Time - readyTime;
 
-      // 完全に同タイムの場合のみ引き分け
       if (delta1 === delta2) {
-        msg = '相打ち！引き分け';
+        showResult(null, null, 'draw');
       } else if (delta1 < delta2) {
-        msg = `プレイヤー1の勝ち！ (${(delta1).toFixed(0)}ms)`;
+        showResult('p1', 'p2', 'speed', delta1, delta2);
       } else {
-        msg = `プレイヤー2の勝ち！ (${(delta2).toFixed(0)}ms)`;
+        showResult('p2', 'p1', 'speed', delta2, delta1);
       }
-      
+    }
+
+    function showResult(winner, loser, reason, winnerTime, loserTime) {
+      if (resultShown) return;
       resultShown = true;
-      document.getElementById('result').innerText = msg;
       document.getElementById('centerLabel').classList.remove('show');
+      let msg = '';
+
+      switch (reason) {
+        case 'early':
+          msg = `プレイヤー${loser === 'p1' ? 1 : 2}の早斬り！ プレイヤー${winner === 'p1' ? 1 : 2}の勝ち！`;
+          document.getElementById(`status${loser === 'p1' ? 1 : 2}`).innerText = '早斬り(負け)';
+          document.getElementById(`status${winner === 'p1' ? 1 : 2}`).innerText = '勝ち';
+          break;
+        case 'timeout':
+          msg = `相手が未反応！ プレイヤー${winner === 'p1' ? 1 : 2}の勝ち！`;
+          document.getElementById(`status${winner === 'p1' ? 1 : 2}`).innerText = '勝ち';
+          const loserId = winner === 'p1' ? '2' : '1';
+          document.getElementById(`status${loserId}`).innerText = '反応なし(負け)';
+          break;
+        case 'draw':
+          msg = '相打ち！引き分け';
+          break;
+        case 'speed':
+          msg = `プレイヤー${winner === 'p1' ? 1 : 2}の勝ち！ (${winnerTime.toFixed(0)}ms)`;
+          break;
+      }
+      document.getElementById('result').innerText = msg;
     }
   </script>
 </body>
