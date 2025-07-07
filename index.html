@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
       font-family: sans-serif;
-      background: #ffffff;
+      background: #ccc;
     }
     .game-container {
       display: flex;
@@ -26,7 +26,7 @@
       justify-content: center;
       align-items: center;
       padding: 20px;
-      border: 1px solid #ccc;
+      border: 1px solid #FFFF;
     }
     #player2 {
       transform: rotate(180deg);
@@ -214,6 +214,24 @@
       }
       document.getElementById('result').innerText = msg;
     }
+    window.addEventListener('keydown',function(event) {
+      if (resultShown) {
+        if (event.code ==='Space') {
+          startGame();
+        }
+        return;
+      }
+
+      if (event.code ==='ShiftLeft') {
+        event.preventDefault();
+        slash('p1');
+      }
+
+      else if (event.code ==='Slash') {
+        event.preventDefault();
+        slash('p2');
+      }
+    });
   </script>
       <!-- フッター -->
     <footer>
