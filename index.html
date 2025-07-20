@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>刹那の見合い切りforスマホ</title>
+  <title>刹那の見合い切り</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
       font-family: sans-serif;
-      background: #ccc;
+      background: #f0f0f0;
     }
     .game-container {
       display: flex;
@@ -18,6 +18,7 @@
       height: 90vh;
       width: 100vw;
       position: relative;
+      overflow: hidden;
     }
     .player {
       flex: 1;
@@ -26,7 +27,7 @@
       justify-content: center;
       align-items: center;
       padding: 20px;
-      border: 1px solid #FFFF;
+      border: 1px solid #ccc;
     }
     #player2 {
       transform: rotate(180deg);
@@ -64,7 +65,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 4em;
+      font-size: 3em;
       font-weight: bold;
       color: red;
       display: none;
@@ -79,6 +80,14 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 2;
+    }
+    @media (min-width: 768px) {
+      .game-container {
+        flex-direction: row-reverse;
+      }
+      #player2 {
+        transform: none;
+      }
     }
   </style>
 </head>
@@ -109,13 +118,12 @@
     let p2Time = null;
     let resultShown = false;
     let gameTimeoutId = null;
-    let decisionTimeoutId = null; // 勝敗決定タイマーのID
+    let decisionTimeoutId = null;
+    let isFeintRound = false; // フェイント機能の追加
 
-    // 定数: 相手の反応を待つ時間 (ミリ秒)
     const REACTION_TIMEOUT = 2000;
 
     function startGame() {
-      // 既存のタイマーがあればすべてクリアする
       if (gameTimeoutId) clearTimeout(gameTimeoutId);
       if (decisionTimeoutId) clearTimeout(decisionTimeoutId);
       
@@ -127,21 +135,49 @@
       p2Time = null;
       resultShown = false;
       started = false;
+      isFeintRound = false;
 
       const delay = Math.random() * 3000 + 2000;
-      gameTimeoutId = setTimeout(() => {
-        started = true;
-        readyTime = performance.now();
-        document.getElementById('result').innerText = '斬れッ！';
-        document.getElementById('centerLabel').classList.add('show');
-      }, delay);
+
+      // フェイントラウンドのロジック
+      if (Math.random() < 0.3) {
+        isFeintRound = true;
+        gameTimeoutId = setTimeout(() => {
+          started = true;
+          document.getElementById('result').innerText = '見切れ！';
+          const centerLabel = document.getElementById('centerLabel');
+          centerLabel.innerText = '斬るな！';
+          centerLabel.classList.add('show');
+
+          decisionTimeoutId = setTimeout(() => {
+            showResult(null, null, 'feintSuccess');
+          }, 2000);
+        }, delay);
+      } else {
+        // 通常のラウンド
+        isFeintRound = false;
+        gameTimeoutId = setTimeout(() => {
+          started = true;
+          readyTime = performance.now();
+          document.getElementById('result').innerText = '斬れッ！';
+          const centerLabel = document.getElementById('centerLabel');
+          centerLabel.innerText = '斬れ！';
+          centerLabel.classList.add('show');
+        }, delay);
+      }
     }
 
     function slash(player) {
       if (resultShown) return;
+
+      if (isFeintRound) {
+        clearTimeout(decisionTimeoutId);
+        showResult(player === 'p1' ? 'p2' : 'p1', player, 'feintFail');
+        return;
+      }
+
       const now = performance.now();
 
-      // 早斬り判定
       if (!started) {
         clearTimeout(gameTimeoutId);
         showResult(player === 'p1' ? 'p2' : 'p1', player, 'early');
@@ -149,7 +185,6 @@
       }
 
       const isP1 = player === 'p1';
-      // 既に斬っている場合は何もしない
       if ((isP1 && p1Time !== null) || (!isP1 && p2Time !== null)) {
         return;
       }
@@ -162,12 +197,10 @@
         document.getElementById('status2').innerText = '斬った！';
       }
 
-      // 両者が斬ったか確認
       if (p1Time !== null && p2Time !== null) {
-        clearTimeout(decisionTimeoutId); // タイムアウト処理をキャンセル
+        clearTimeout(decisionTimeoutId); 
         checkResult();
       } else {
-        // 最初の斬りだった場合、相手の反応を待つタイマーを開始
         decisionTimeoutId = setTimeout(() => {
           showResult(player, null, 'timeout');
         }, REACTION_TIMEOUT);
@@ -211,31 +244,46 @@
         case 'speed':
           msg = `プレイヤー${winner === 'p1' ? 1 : 2}の勝ち！ (${winnerTime.toFixed(0)}ms)`;
           break;
+        case 'feintFail':
+          msg = `フェイントだ！ プレイヤー${winner === 'p1' ? 1 : 2}の勝ち！`;
+          document.getElementById(`status${loser === 'p1' ? 1 : 2}`).innerText = '斬ってしまった(負け)';
+          document.getElementById(`status${winner === 'p1' ? 1 : 2}`).innerText = '見切った(勝ち)';
+          break;
+        case 'feintSuccess':
+          msg = '両者見切り！ 引き分け';
+          document.getElementById('status1').innerText = '見切った';
+          document.getElementById('status2').innerText = '見切った';
+          break;
       }
       document.getElementById('result').innerText = msg;
     }
-    window.addEventListener('keydown',function(event) {
-      if (resultShown) {
-        if (event.code ==='Space') {
+
+    window.addEventListener('keydown', function(event) {
+      const resultText = document.getElementById('result').innerText;
+      const isGameActive = resultText === '準備...' || resultText === '斬れッ！' || resultText === '見切れ！';
+
+      if (event.code === 'Space' || event.code === 'Enter') {
+        if (!isGameActive) {
+          event.preventDefault();
           startGame();
+          return;
         }
-        return;
       }
 
-      if (event.code ==='ShiftLeft') {
-        event.preventDefault();
-        slash('p1');
-      }
-
-      else if (event.code ==='Slash') {
-        event.preventDefault();
-        slash('p2');
+      if (isGameActive && !resultShown) {
+        if (event.code === 'ShiftLeft') {
+          event.preventDefault();
+          slash('p1');
+        } 
+        else if (event.code === 'Slash') {
+          event.preventDefault();
+          slash('p2');
+        }
       }
     });
   </script>
-      <!-- フッター -->
-    <footer>
-        <p>&copy; 2024 くろあめ</p>
-    </footer>
+  <footer>
+        <p>&copy; 2025 くろあめ</p>
+    </footer>
 </body>
 </html>
